@@ -1,65 +1,204 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { useUser, SignInButton } from '@clerk/nextjs';
+import { Sparkles } from 'lucide-react';
+
+export default function Onboarding() {
+  const router = useRouter();
+  const { isSignedIn, user } = useUser();
+  const [step, setStep] = useState(0);
+  const [formData, setFormData] = useState({
+    businessName: '',
+    currency: 'USD',
+    baseHourlyRate: '',
+    minHourlyRate: '',
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  // Hydrate settings if they exist
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!isSignedIn) return;
+      try {
+        const res = await fetch('/api/settings', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const s = data?.settings;
+        if (s) {
+          setFormData({
+            businessName: s.businessName || '',
+            currency: s.currency || 'USD',
+            baseHourlyRate: s.baseHourlyRate ? String(s.baseHourlyRate) : '',
+            minHourlyRate: s.minHourlyRate ? String(s.minHourlyRate) : '',
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load settings', err);
+      }
+    };
+    loadSettings();
+  }, [isSignedIn]);
+
+  const steps = [
+    {
+      title: isSignedIn ? `Welcome, ${user?.firstName}!` : "Welcome to Quote Cards!",
+      desc: "Let's get you set up to send beautiful quotes.",
+      content: (
+        <div className="text-center space-y-6">
+          <div className="flex justify-center">
+            <Sparkles className="w-24 h-24 text-macaw-blue animate-bounce" />
+          </div>
+          {!isSignedIn ? (
+            <SignInButton mode="modal">
+              <Button variant="primary" size="lg">
+                Sign In to Start
+              </Button>
+            </SignInButton>
+          ) : (
+            <div className="text-wolf-grey font-bold">
+              Ready to set up your business profile?
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      title: "What's your business name?",
+      desc: "This will appear on your quotes.",
+      content: (
+        <Input
+          autoFocus
+          placeholder="e.g. Acme Inc."
+          value={formData.businessName}
+          onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+      )
+    },
+    {
+      title: "Pick your currency",
+      desc: "You can change this later.",
+      content: (
+        <div className="grid grid-cols-2 gap-4">
+          {['USD', 'EUR', 'GBP', 'ZAR'].map(c => (
+            <button
+              key={c}
+              onClick={() => setFormData({ ...formData, currency: c })}
+              className={`p-4 rounded-2xl border-2 font-bold transition-all ${formData.currency === c
+                ? 'border-macaw-blue bg-macaw-blue/10 text-macaw-blue'
+                : 'border-hare-grey text-wolf-grey hover:border-macaw-blue'
+                }`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              {c}
+            </button>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      )
+    },
+    {
+      title: "Your rates",
+      desc: "Set your ideal and minimum hourly rates.",
+      content: (
+        <div className="space-y-4">
+          <Input
+            label="Ideal hourly rate"
+            placeholder="e.g. 120"
+            type="number"
+            value={formData.baseHourlyRate}
+            onChange={(e) => setFormData({ ...formData, baseHourlyRate: e.target.value })}
+          />
+          <Input
+            label="Minimum acceptable rate"
+            placeholder="e.g. 80"
+            type="number"
+            value={formData.minHourlyRate}
+            onChange={(e) => setFormData({ ...formData, minHourlyRate: e.target.value })}
+          />
         </div>
-      </main>
+      )
+    }
+  ];
+
+  const handleNext = async () => {
+    setError(null);
+    if (step === 0 && !isSignedIn) {
+      return;
+    }
+
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: formData.businessName || undefined,
+          currency: formData.currency,
+          baseHourlyRate: formData.baseHourlyRate ? Number(formData.baseHourlyRate) : undefined,
+          minHourlyRate: formData.minHourlyRate ? Number(formData.minHourlyRate) : undefined,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save settings');
+      setNotice('Settings saved!');
+      router.push('/dashboard');
+    } catch (err) {
+      console.error(err);
+      setError('Could not save your settings. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 max-w-md mx-auto">
+      <div className="w-full mb-8">
+        <div className="h-4 bg-hare-grey rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-feather-green"
+            initial={{ width: 0 }}
+            animate={{ width: `${((step + 1) / steps.length) * 100}%` }}
+            transition={{ duration: 0.5, ease: "backOut" }}
+          />
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -20, opacity: 0 }}
+          transition={{ duration: 0.4, type: "spring", bounce: 0.2 }}
+          className="w-full space-y-8 text-center"
+        >
+          <h1 className="text-3xl font-extrabold text-eel-black tracking-tight">{steps[step].title}</h1>
+          <p className="text-wolf-grey text-lg font-bold">{steps[step].desc}</p>
+
+          <div className="py-6">
+            {steps[step].content}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+
+      <div className="w-full mt-8">
+        {(step > 0 || isSignedIn) && (
+          <Button fullWidth size="lg" onClick={handleNext} className="animate-in fade-in zoom-in duration-300" disabled={isSaving}>
+            {step === steps.length - 1 ? (isSaving ? "Saving..." : "Get Started") : "Continue"}
+          </Button>
+        )}
+        {error && <p className="text-cardinal-red text-sm font-bold mt-3 text-center">{error}</p>}
+        {notice && !error && <p className="text-feather-green text-sm font-bold mt-3 text-center">{notice}</p>}
+      </div>
     </div>
   );
 }

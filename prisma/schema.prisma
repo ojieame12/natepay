@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Quote {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User?    @relation(fields: [userId], references: [id])
+  slug         String   @unique
+  status       String   @default("Draft") // Draft, Sent, Viewed, Paid
+  clientName   String
+  projectTitle String
+  currency     String   @default("USD")
+  totalAmount  Float?
+  rawNotes     String?
+  aiSummary    String?
+  itemsJson    Json?
+  views        Int      @default(0)
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime?
+  updatedAt    DateTime @updatedAt
+  retainerStatus       String? @default("none") // none, pending, active, past_due, canceled
+  retainerSubscriptionId String?
+  retainerAmount       Float?
+  retainerNegotiation  Json?
+  paymentProvider     String?
+  providerReference   String?
+
+  packages     QuotePackage[]
+  paymentPlans PaymentPlan[]
+  payments     Payment[]
+}
+
+model QuotePackage {
+  id            String  @id @default(uuid())
+  quoteId       String
+  quote         Quote   @relation(fields: [quoteId], references: [id])
+  name          String
+  price         Float
+  description   String
+  features      String[]
+  isRecommended Boolean @default(false)
+  timeline      String?
+  revisions     String?
+  supportLevel  String?
+}
+
+model PaymentPlan {
+  id      String @id @default(uuid())
+  quoteId String
+  quote   Quote  @relation(fields: [quoteId], references: [id])
+  type    String // light, balanced, full
+  deposit Float
+  total   Float
+}
+
+model Payment {
+  id               String   @id @default(uuid())
+  quoteId          String
+  quote            Quote    @relation(fields: [quoteId], references: [id])
+  stripeSessionId  String   @unique
+  amount           Float
+  status           String   @default("pending") // pending, paid, failed
+  createdAt        DateTime @default(now())
+}
+
+model UserSettings {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id])
+  businessName     String?
+  currency         String   @default("USD")
+  baseHourlyRate   Float?
+  minHourlyRate    Float?
+  defaultDeposit   Float?   // 0-1
+  platformFeePercent Float? // override platform fee per user
+  preferredProvider String? // stripe, flutterwave, paystack
+  flutterwaveSubaccountId String?
+  onboardingComplete Boolean @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model User {
+  id              String   @id
+  email           String?
+  stripeAccountId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  quotes          Quote[]
+  settings        UserSettings?
+}

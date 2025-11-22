@@ -1,0 +1,1 @@
+-- Using prisma db push for schema sync in this repo. No tracked migrations yet.
