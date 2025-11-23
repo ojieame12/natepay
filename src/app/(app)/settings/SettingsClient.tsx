@@ -27,13 +27,14 @@ export default function SettingsClient() {
                 const res = await fetch('/api/settings');
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.id) { // Check if data exists
+                    const s = data?.settings ?? data;
+                    if (s?.id) {
                         setFormData({
-                            businessName: data.businessName || '',
-                            currency: data.currency || 'USD',
-                            baseHourlyRate: data.baseHourlyRate || 100,
-                            minHourlyRate: data.minHourlyRate || 50,
-                            defaultDeposit: data.defaultDeposit || 0.5,
+                            businessName: s.businessName || '',
+                            currency: s.currency || 'USD',
+                            baseHourlyRate: s.baseHourlyRate || 100,
+                            minHourlyRate: s.minHourlyRate || 50,
+                            defaultDeposit: s.defaultDeposit || 0.5,
                         });
                     }
                 }
@@ -88,7 +89,7 @@ export default function SettingsClient() {
         <div className="p-8 max-w-3xl mx-auto space-y-6">
             {showOnboarding && (
                 <Card className="bg-macaw-blue/10 border-macaw-blue mb-6 animate-in slide-in-from-top-4">
-                    <h2 className="text-xl font-extrabold text-macaw-blue mb-2">👋 Welcome to Quote Cards!</h2>
+                    <h2 className="text-xl font-extrabold text-macaw-blue mb-2">👋 Welcome to NatePay!</h2>
                     <p className="text-eel-black font-bold">
                         Let&apos;s get your profile set up first. We need your currency and rates to generate accurate AI quotes.
                     </p>

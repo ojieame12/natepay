@@ -14,7 +14,9 @@ model Quote {
   slug         String   @unique
   status       String   @default("Draft") // Draft, Sent, Viewed, Paid
   clientName   String
+  clientPhone  String?  // For WhatsApp/SMS to employer
   projectTitle String
+  mode         String   @default("project") // project, salary
   currency     String   @default("USD")
   totalAmount  Float?
   rawNotes     String?
@@ -34,6 +36,7 @@ model Quote {
   packages     QuotePackage[]
   paymentPlans PaymentPlan[]
   payments     Payment[]
+  contract     Contract?
 }
 
 model QuotePackage {
@@ -81,6 +84,9 @@ model UserSettings {
   platformFeePercent Float? // override platform fee per user
   preferredProvider String? // stripe, flutterwave, paystack
   flutterwaveSubaccountId String?
+  userType         String?  // 'freelancer' | 'worker'
+  jobType          String?  // 'cleaning' | 'driving' | 'gardening' | 'security' | etc
+  simplifiedUI     Boolean  @default(false) // Show simple UI for workers
   onboardingComplete Boolean @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -95,4 +101,25 @@ model User {
 
   quotes          Quote[]
   settings        UserSettings?
+  contracts       Contract[] // Contracts where this user is the worker
+}
+
+model Contract {
+  id            String   @id @default(uuid())
+  quoteId       String   @unique
+  quote         Quote    @relation(fields: [quoteId], references: [id])
+  workerId      String
+  worker        User     @relation(fields: [workerId], references: [id])
+  employerEmail String
+  employerName  String?
+  amount        Float
+  currency      String
+  interval      String   @default("month")
+  status        String   @default("active") // active, paused, canceled
+  startDate     DateTime @default(now())
+  nextPaymentDate DateTime
+  paymentMethodId String?
+  provider      String?  // stripe, mono, flutterwave
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

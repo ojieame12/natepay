@@ -1,13 +1,19 @@
-@import "tailwindcss";
+@config "../../tailwind.config.ts";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-white text-eel-black font-sans antialiased;
+    @apply bg-alabaster text-ink-black font-sans antialiased;
   }
-}
 
-@layer components {
-  .btn-3d {
-    @apply active:translate-y-[4px] active:shadow-none transition-all;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display tracking-tight;
   }
 }

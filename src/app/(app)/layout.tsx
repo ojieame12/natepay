@@ -24,8 +24,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         const res = await fetch('/api/settings');
         if (res.ok) {
           const data = await res.json();
+          const settings = data?.settings ?? data;
           // Redirect if no settings or onboarding not complete
-          if (!data?.onboardingComplete) {
+          if (!settings?.onboardingComplete) {
             router.push('/settings?onboarding=true');
           }
         }
@@ -43,7 +44,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="min-h-screen bg-white flex">
           <aside className="w-64 border-r-2 border-hare-grey p-4 hidden md:block fixed h-full">
             <div className="text-2xl font-bold text-feather-green mb-8 px-4 tracking-tighter">
-              Quote Cards
+              NatePay
             </div>
             <nav className="space-y-2">
               {navItems.map((item) => {

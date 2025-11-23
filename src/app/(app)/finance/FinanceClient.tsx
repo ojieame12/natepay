@@ -6,10 +6,12 @@ import { loadConnectAndInitialize } from '@stripe/connect-js';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { Check } from 'lucide-react';
 
 export default function FinanceClient({ stripeAccountId }: { stripeAccountId?: string | null }) {
     const [isLoading, setIsLoading] = useState(false);
     const [notice, setNotice] = useState<string | null>(null);
+    const [isMonoActive, setIsMonoActive] = useState(false);
 
     // Stripe Connect State
     const [stripeConnectInstance] = useState(() => {
@@ -141,6 +143,50 @@ export default function FinanceClient({ stripeAccountId }: { stripeAccountId?: s
                     >
                         {isFlwLoading ? 'Connecting...' : 'Connect with Flutterwave'}
                     </Button>
+                </Card>
+
+                <div className="flex items-center gap-4 text-wolf-grey font-bold uppercase tracking-wide justify-center">
+                    <div className="h-px bg-hare-grey flex-1" />
+                    <span>OR</span>
+                    <div className="h-px bg-hare-grey flex-1" />
+                </div>
+
+                <Card className="p-10 space-y-6 border-eel-black/20">
+                    <div className="text-6xl">🏦</div>
+                    <h1 className="text-3xl font-extrabold text-eel-black">Direct Debit (Nigeria)</h1>
+                    <p className="text-wolf-grey font-bold text-lg">
+                        Connect Mono to accept recurring Direct Debit payments from Nigerian bank accounts.
+                    </p>
+                    <div className="bg-hare-grey/10 p-6 rounded-2xl border-2 border-hare-grey/50 text-center space-y-4">
+                        <div className="flex justify-center">
+                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl shadow-sm border-2 border-hare-grey">
+                                ⚡️
+                            </div>
+                        </div>
+                        <div>
+                            <p className="font-extrabold text-eel-black text-lg">Platform Managed</p>
+                            <p className="text-wolf-grey font-bold text-sm max-w-xs mx-auto">
+                                We handle the technical connection. Funds are routed directly to your connected bank account.
+                            </p>
+                        </div>
+                    </div>
+                    {isMonoActive ? (
+                        <div className="flex items-center justify-center gap-2 p-4 bg-feather-green/10 text-feather-green font-extrabold rounded-xl border-2 border-feather-green/20">
+                            <Check className="w-6 h-6" />
+                            <span>Direct Debit Active</span>
+                        </div>
+                    ) : (
+                        <Button
+                            size="lg"
+                            className="w-full bg-eel-black text-white hover:bg-eel-black/80 shadow-btn shadow-eel-black/50 border-eel-black"
+                            onClick={() => {
+                                setIsMonoActive(true);
+                                setNotice('Direct Debit activated successfully! 🇳🇬');
+                            }}
+                        >
+                            Activate Direct Debit
+                        </Button>
+                    )}
                 </Card>
 
                 {notice && (

@@ -26,7 +26,9 @@ export interface Quote {
   slug: string;
   userId: string;
   clientName: string;
+  clientPhone?: string;
   projectTitle: string;
+  mode?: string;
   status: 'Draft' | 'Sent' | 'Viewed' | 'Paid';
   totalAmount: number | null;
   createdAt: string;

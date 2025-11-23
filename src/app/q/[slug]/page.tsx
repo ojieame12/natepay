@@ -358,17 +358,17 @@ export default function PublicQuotePage() {
                 ? getPricePosition(item.amount, item.negotiation.marketRate)
                 : null;
               return (
-              <div
-                key={idx}
-                className="group relative perspective-1000 cursor-pointer min-h-[120px]"
-                onClick={() => {
-                  trackEvent('negotiation_viewed', {
-                    item: item.description,
-                    price: item.amount,
-                    position: position?.label,
-                  });
-                }}
-              >
+                <div
+                  key={idx}
+                  className="group relative perspective-1000 cursor-pointer min-h-[120px]"
+                  onClick={() => {
+                    trackEvent('negotiation_viewed', {
+                      item: item.description,
+                      price: item.amount,
+                      position: position?.label,
+                    });
+                  }}
+                >
                   <div className="relative w-full h-full transition-all duration-500 transform-style-3d group-hover:rotate-x-180">
                     {/* Front */}
                     <div className="absolute inset-0 flex items-center justify-between p-4 bg-swan-white rounded-2xl border-2 border-hare-grey backface-hidden">
@@ -532,17 +532,17 @@ export default function PublicQuotePage() {
             <div className="relative w-full h-full transition-all duration-500 transform-style-3d group-hover:rotate-x-180">
               {/* Front Face */}
               <div className="absolute inset-0 p-6 bg-white backface-hidden z-10 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold text-wolf-grey uppercase tracking-wide">Need ongoing support?</p>
-              <h2 className="text-xl font-extrabold text-eel-black">Start a monthly retainer</h2>
-            </div>
-            {quote.retainerNegotiation && (
-              <span className="text-xs bg-macaw-blue/10 text-macaw-blue px-2 py-1 rounded-full font-extrabold uppercase tracking-wide animate-pulse">
-                Why?
-              </span>
-            )}
-          </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-wolf-grey uppercase tracking-wide">Need ongoing support?</p>
+                    <h2 className="text-xl font-extrabold text-eel-black">Start a monthly retainer</h2>
+                  </div>
+                  {quote.retainerNegotiation && (
+                    <span className="text-xs bg-macaw-blue/10 text-macaw-blue px-2 py-1 rounded-full font-extrabold uppercase tracking-wide animate-pulse">
+                      Why?
+                    </span>
+                  )}
+                </div>
                 <p className="text-wolf-grey font-bold">
                   {quote.retainerDescription || 'Maintenance & Support'}
                 </p>
@@ -610,6 +610,22 @@ export default function PublicQuotePage() {
             <p className="text-xs text-wolf-grey">
               We’ll bill monthly and route funds to the seller, keeping a small platform fee.
             </p>
+            {quote.currency === 'NGN' && (
+              <div className="pt-4 border-t-2 border-hare-grey">
+                <Button
+                  className="w-full bg-eel-black text-white hover:bg-eel-black/80 shadow-btn shadow-eel-black/50 border-eel-black"
+                  onClick={() => {
+                    // In a real app, we'd load the Mono Connect script here
+                    alert('Mono Direct Debit flow would start here! 🇳🇬');
+                  }}
+                >
+                  Pay with Mono (Direct Debit)
+                </Button>
+                <p className="text-[10px] text-center text-wolf-grey font-bold mt-2 uppercase tracking-wide">
+                  Secure Bank Transfer
+                </p>
+              </div>
+            )}
           </div>
         </Card>
       </div>

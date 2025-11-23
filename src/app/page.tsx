@@ -13,6 +13,8 @@ export default function Onboarding() {
   const { isSignedIn, user } = useUser();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({
+    userType: '' as 'freelancer' | 'worker' | '',
+    jobType: '',
     businessName: '',
     currency: 'USD',
     baseHourlyRate: '',
@@ -48,7 +50,7 @@ export default function Onboarding() {
 
   const steps = [
     {
-      title: isSignedIn ? `Welcome, ${user?.firstName}!` : "Welcome to Quote Cards!",
+      title: isSignedIn ? `Welcome, ${user?.firstName}!` : "Welcome to NatePay!",
       desc: "Let's get you set up to send beautiful quotes.",
       content: (
         <div className="text-center space-y-6">
@@ -63,14 +65,74 @@ export default function Onboarding() {
             </SignInButton>
           ) : (
             <div className="text-wolf-grey font-bold">
-              Ready to set up your business profile?
+              Ready to set up your profile?
             </div>
           )}
         </div>
       )
     },
     {
-      title: "What's your business name?",
+      title: "How do you get paid?",
+      desc: "This helps us customize your experience.",
+      content: (
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => setFormData({ ...formData, userType: 'freelancer' })}
+            className={`p-6 rounded-2xl border-2 font-bold transition-all text-left space-y-2 ${formData.userType === 'freelancer'
+              ? 'border-macaw-blue bg-macaw-blue/10 text-macaw-blue'
+              : 'border-hare-grey text-wolf-grey hover:border-macaw-blue'
+              }`}
+          >
+            <div className="text-4xl">💼</div>
+            <div className="font-extrabold text-lg">Projects</div>
+            <div className="text-sm opacity-80">I quote clients for design, development, or consulting</div>
+          </button>
+          <button
+            onClick={() => setFormData({ ...formData, userType: 'worker' })}
+            className={`p-6 rounded-2xl border-2 font-bold transition-all text-left space-y-2 ${formData.userType === 'worker'
+              ? 'border-feather-green bg-feather-green/10 text-feather-green'
+              : 'border-hare-grey text-wolf-grey hover:border-feather-green'
+              }`}
+          >
+            <div className="text-4xl">🏠</div>
+            <div className="font-extrabold text-lg">Regular Work</div>
+            <div className="text-sm opacity-80">I work for the same people every month</div>
+          </button>
+        </div>
+      )
+    },
+    ...(formData.userType === 'worker' ? [
+      {
+        title: "What work do you do?",
+        desc: "This helps us set up your profile.",
+        content: (
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { value: 'cleaning', label: 'House Cleaning', emoji: '🧹' },
+              { value: 'driving', label: 'Driving', emoji: '🚗' },
+              { value: 'gardening', label: 'Gardening', emoji: '🌳' },
+              { value: 'security', label: 'Security', emoji: '🛡️' },
+              { value: 'cooking', label: 'Cooking', emoji: '👨‍🍳' },
+              { value: 'other', label: 'Other', emoji: '✋' },
+            ].map((job) => (
+              <button
+                key={job.value}
+                onClick={() => setFormData({ ...formData, jobType: job.value })}
+                className={`p-4 rounded-2xl border-2 font-bold transition-all ${formData.jobType === job.value
+                  ? 'border-feather-green bg-feather-green/10 text-feather-green'
+                  : 'border-hare-grey text-wolf-grey hover:border-feather-green'
+                  }`}
+              >
+                <div className="text-3xl mb-1">{job.emoji}</div>
+                <div className="text-sm">{job.label}</div>
+              </button>
+            ))}
+          </div>
+        )
+      }
+    ] : []),
+    {
+      title: formData.userType === 'worker' ? "Pick your currency" : "What's your business name?",
       desc: "This will appear on your quotes.",
       content: (
         <Input
@@ -101,28 +163,30 @@ export default function Onboarding() {
         </div>
       )
     },
-    {
-      title: "Your rates",
-      desc: "Set your ideal and minimum hourly rates.",
-      content: (
-        <div className="space-y-4">
-          <Input
-            label="Ideal hourly rate"
-            placeholder="e.g. 120"
-            type="number"
-            value={formData.baseHourlyRate}
-            onChange={(e) => setFormData({ ...formData, baseHourlyRate: e.target.value })}
-          />
-          <Input
-            label="Minimum acceptable rate"
-            placeholder="e.g. 80"
-            type="number"
-            value={formData.minHourlyRate}
-            onChange={(e) => setFormData({ ...formData, minHourlyRate: e.target.value })}
-          />
-        </div>
-      )
-    }
+    ...(formData.userType === 'freelancer' ? [
+      {
+        title: "Your rates",
+        desc: "Set your ideal and minimum hourly rates.",
+        content: (
+          <div className="space-y-4">
+            <Input
+              label="Ideal hourly rate"
+              placeholder="e.g. 120"
+              type="number"
+              value={formData.baseHourlyRate}
+              onChange={(e) => setFormData({ ...formData, baseHourlyRate: e.target.value })}
+            />
+            <Input
+              label="Minimum acceptable rate"
+              placeholder="e.g. 80"
+              type="number"
+              value={formData.minHourlyRate}
+              onChange={(e) => setFormData({ ...formData, minHourlyRate: e.target.value })}
+            />
+          </div>
+        )
+      }
+    ] : [])
   ];
 
   const handleNext = async () => {
@@ -142,10 +206,13 @@ export default function Onboarding() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userType: formData.userType,
+          jobType: formData.jobType || undefined,
           businessName: formData.businessName || undefined,
           currency: formData.currency,
           baseHourlyRate: formData.baseHourlyRate ? Number(formData.baseHourlyRate) : undefined,
           minHourlyRate: formData.minHourlyRate ? Number(formData.minHourlyRate) : undefined,
+          simplifiedUI: formData.userType === 'worker',
         }),
       });
       if (!res.ok) throw new Error('Failed to save settings');

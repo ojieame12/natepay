@@ -12,6 +12,8 @@ import type { Quote, QuoteItem } from '@/lib/store';
 export default function EditQuoteClient({ quote }: { quote: Quote }) {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [isSalaryMode, setIsSalaryMode] = useState((quote as any).mode === 'salary');
 
     const [formData, setFormData] = useState({
         clientName: quote.clientName,
@@ -31,6 +33,7 @@ export default function EditQuoteClient({ quote }: { quote: Quote }) {
                     clientName: formData.clientName,
                     projectTitle: formData.projectTitle,
                     status: formData.status,
+                    mode: isSalaryMode ? 'salary' : 'project',
                     items: formData.items,
                     retainerNegotiation: formData.retainerNegotiation,
                 }),
@@ -115,112 +118,169 @@ export default function EditQuoteClient({ quote }: { quote: Quote }) {
                     </div>
                 </Card>
 
-                {/* Line Items */}
+                {/* Line Items / Salary Mode */}
                 <Card className="space-y-6">
-                    <h2 className="text-xl font-extrabold text-eel-black">Line Items & Smart Data</h2>
-                    <div className="space-y-4">
-                        {formData.items.map((item, idx) => (
-                            <div key={idx} className="border-2 border-hare-grey rounded-2xl p-4 space-y-4 bg-white">
-                                <div className="flex gap-4 items-start">
-                                    <div className="flex-1 space-y-2">
-                                        <Input
-                                            label="Description"
-                                            value={item.description}
-                                            onChange={(e) => updateItem(idx, { description: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="w-32 space-y-2">
-                                        <Input
-                                            label="Price"
-                                            type="number"
-                                            value={item.amount}
-                                            onChange={(e) => updateItem(idx, { amount: Number(e.target.value) })}
-                                        />
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        className="mt-8 text-cardinal-red hover:bg-cardinal-red/10"
-                                        onClick={() => {
-                                            const newItems = formData.items.filter((_, i) => i !== idx);
-                                            setFormData({ ...formData, items: newItems });
-                                        }}
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </Button>
-                                </div>
-
-                                {/* Smart Data Editor */}
-                                <div className="bg-macaw-blue/5 rounded-xl p-4 border border-macaw-blue/20 space-y-4">
-                                    <div className="flex items-center gap-2 text-macaw-blue font-extrabold uppercase text-xs tracking-wide">
-                                        <Sparkles className="w-4 h-4" /> Smart Negotiation Data
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs font-bold text-wolf-grey uppercase">Market Min</label>
-                                            <input
-                                                type="number"
-                                                className="w-full p-2 rounded-lg border border-hare-grey font-bold"
-                                                value={item.negotiation?.marketRate.min || 0}
-                                                onChange={(e) => updateNegotiation(idx, { marketRate: { ...item.negotiation?.marketRate, min: Number(e.target.value) } })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-bold text-wolf-grey uppercase">Market Max</label>
-                                            <input
-                                                type="number"
-                                                className="w-full p-2 rounded-lg border border-hare-grey font-bold"
-                                                value={item.negotiation?.marketRate.max || 0}
-                                                onChange={(e) => updateNegotiation(idx, { marketRate: { ...item.negotiation?.marketRate, max: Number(e.target.value) } })}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-xs font-bold text-wolf-grey uppercase">Complexity</label>
-                                        <select
-                                            className="w-full p-2 rounded-lg border border-hare-grey font-bold"
-                                            value={item.negotiation?.complexityScore || 'Medium'}
-                                            onChange={(e) => updateNegotiation(idx, { complexityScore: e.target.value })}
-                                        >
-                                            <option value="Low">Low</option>
-                                            <option value="Medium">Medium</option>
-                                            <option value="High">High</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-xs font-bold text-wolf-grey uppercase">Why it matters</label>
-                                        <input
-                                            className="w-full p-2 rounded-lg border border-hare-grey font-bold"
-                                            value={item.negotiation?.whyItMatters || ''}
-                                            onChange={(e) => updateNegotiation(idx, { whyItMatters: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="text-xs font-bold text-wolf-grey uppercase">ROI Potential</label>
-                                        <input
-                                            className="w-full p-2 rounded-lg border border-hare-grey font-bold"
-                                            value={item.negotiation?.roiPotential || ''}
-                                            onChange={(e) => updateNegotiation(idx, { roiPotential: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-
-                        <Button
-                            variant="outline"
-                            className="w-full border-dashed"
-                            onClick={() => setFormData({
-                                ...formData,
-                                items: [...formData.items, { description: 'New Item', amount: 0 }]
-                            })}
-                        >
-                            <Plus className="w-4 h-4 mr-2" /> Add Item
-                        </Button>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-extrabold text-eel-black">
+                            {isSalaryMode ? 'Monthly Salary Details' : 'Line Items & Smart Data'}
+                        </h2>
+                        <div className="flex bg-hare-grey/20 p-1 rounded-xl">
+                            <button
+                                onClick={() => setIsSalaryMode(false)}
+                                className={`px-4 py-2 rounded-lg text-sm font-extrabold transition-all ${!isSalaryMode ? 'bg-white shadow-sm text-eel-black' : 'text-wolf-grey hover:text-eel-black'}`}
+                            >
+                                Project Quote
+                            </button>
+                            <button
+                                onClick={() => setIsSalaryMode(true)}
+                                className={`px-4 py-2 rounded-lg text-sm font-extrabold transition-all ${isSalaryMode ? 'bg-white shadow-sm text-eel-black' : 'text-wolf-grey hover:text-eel-black'}`}
+                            >
+                                Monthly Salary
+                            </button>
+                        </div>
                     </div>
+
+                    {isSalaryMode ? (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                            <div className="p-4 bg-feather-green/10 border-2 border-feather-green/20 rounded-2xl">
+                                <p className="text-sm font-bold text-feather-green mb-2">
+                                    💡 PayDay Mode
+                                </p>
+                                <p className="text-sm font-bold text-eel-black">
+                                    This creates a recurring monthly contract. The employer will be billed automatically every month.
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <Input
+                                    label="Role / Job Title"
+                                    placeholder="e.g. Domestic Worker"
+                                    value={formData.items[0]?.description || ''}
+                                    onChange={(e) => {
+                                        const newItems = [...formData.items];
+                                        if (newItems.length === 0) newItems.push({ description: '', amount: 0 });
+                                        newItems[0] = { ...newItems[0], description: e.target.value };
+                                        setFormData({ ...formData, items: newItems });
+                                    }}
+                                />
+                                <Input
+                                    label="Monthly Wage"
+                                    type="number"
+                                    placeholder="0.00"
+                                    value={formData.items[0]?.amount || 0}
+                                    onChange={(e) => {
+                                        const newItems = [...formData.items];
+                                        if (newItems.length === 0) newItems.push({ description: '', amount: 0 });
+                                        newItems[0] = { ...newItems[0], amount: Number(e.target.value) };
+                                        setFormData({ ...formData, items: newItems });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {formData.items.map((item, idx) => (
+                                <div key={idx} className="border-2 border-hare-grey rounded-2xl p-4 space-y-4 bg-white">
+                                    <div className="flex gap-4 items-start">
+                                        <div className="flex-1 space-y-2">
+                                            <Input
+                                                label="Description"
+                                                value={item.description}
+                                                onChange={(e) => updateItem(idx, { description: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="w-32 space-y-2">
+                                            <Input
+                                                label="Price"
+                                                type="number"
+                                                value={item.amount}
+                                                onChange={(e) => updateItem(idx, { amount: Number(e.target.value) })}
+                                            />
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            className="mt-8 text-cardinal-red hover:bg-cardinal-red/10"
+                                            onClick={() => {
+                                                const newItems = formData.items.filter((_, i) => i !== idx);
+                                                setFormData({ ...formData, items: newItems });
+                                            }}
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </Button>
+                                    </div>
+
+                                    {/* Smart Data Editor */}
+                                    <div className="bg-macaw-blue/5 rounded-xl p-4 border border-macaw-blue/20 space-y-4">
+                                        <div className="flex items-center gap-2 text-macaw-blue font-extrabold uppercase text-xs tracking-wide">
+                                            <Sparkles className="w-4 h-4" /> Smart Negotiation Data
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-bold text-wolf-grey uppercase">Market Min</label>
+                                                <input
+                                                    type="number"
+                                                    className="w-full p-2 rounded-lg border border-hare-grey font-bold"
+                                                    value={item.negotiation?.marketRate.min || 0}
+                                                    onChange={(e) => updateNegotiation(idx, { marketRate: { ...item.negotiation?.marketRate, min: Number(e.target.value) } })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-wolf-grey uppercase">Market Max</label>
+                                                <input
+                                                    type="number"
+                                                    className="w-full p-2 rounded-lg border border-hare-grey font-bold"
+                                                    value={item.negotiation?.marketRate.max || 0}
+                                                    onChange={(e) => updateNegotiation(idx, { marketRate: { ...item.negotiation?.marketRate, max: Number(e.target.value) } })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs font-bold text-wolf-grey uppercase">Complexity</label>
+                                            <select
+                                                className="w-full p-2 rounded-lg border border-hare-grey font-bold"
+                                                value={item.negotiation?.complexityScore || 'Medium'}
+                                                onChange={(e) => updateNegotiation(idx, { complexityScore: e.target.value })}
+                                            >
+                                                <option value="Low">Low</option>
+                                                <option value="Medium">Medium</option>
+                                                <option value="High">High</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs font-bold text-wolf-grey uppercase">Why it matters</label>
+                                            <input
+                                                className="w-full p-2 rounded-lg border border-hare-grey font-bold"
+                                                value={item.negotiation?.whyItMatters || ''}
+                                                onChange={(e) => updateNegotiation(idx, { whyItMatters: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs font-bold text-wolf-grey uppercase">ROI Potential</label>
+                                            <input
+                                                className="w-full p-2 rounded-lg border border-hare-grey font-bold"
+                                                value={item.negotiation?.roiPotential || ''}
+                                                onChange={(e) => updateNegotiation(idx, { roiPotential: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            <Button
+                                variant="outline"
+                                className="w-full border-dashed"
+                                onClick={() => setFormData({
+                                    ...formData,
+                                    items: [...formData.items, { description: 'New Item', amount: 0 }]
+                                })}
+                            >
+                                <Plus className="w-4 h-4 mr-2" /> Add Item
+                            </Button>
+                        </div>
+                    )}
                 </Card>
 
                 {/* Retainer Editor */}

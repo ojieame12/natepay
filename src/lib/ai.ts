@@ -58,7 +58,7 @@ export interface SellerSettings {
   defaultDeposit?: number;
 }
 
-const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY;
 const MODEL = 'gemini-3-pro-preview';
 
 function cleanJson(text: string) {

@@ -3,11 +3,11 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import EditQuoteClient from './EditQuoteClient';
 
-export default async function EditQuotePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditQuotePage({ params }: { params: { id: string } }) {
     const { userId } = await auth();
     if (!userId) return <div>Unauthorized</div>;
 
-    const { id } = await params;
+    const { id } = params;
 
     const quote = await prisma.quote.findUnique({
         where: { id },

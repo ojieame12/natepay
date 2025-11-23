@@ -3,7 +3,8 @@ import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
-const stripe = stripeSecret ? new Stripe(stripeSecret, { apiVersion: '2025-02-24.acacia' }) : null;
+const STRIPE_API_VERSION: Stripe.StripeConfig['apiVersion'] = '2025-11-17.clover';
+const stripe = stripeSecret ? new Stripe(stripeSecret, { apiVersion: STRIPE_API_VERSION }) : null;
 const DEFAULT_PLATFORM_FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT || '5');
 
 export async function POST(req: Request) {
@@ -88,6 +89,26 @@ export async function POST(req: Request) {
         retainerAmount: amount,
       },
     });
+
+    // PayDay Expansion: Create Contract if Salary Mode
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((quote as any).mode === 'salary') {
+      const existingContract = await prisma.contract.findUnique({ where: { quoteId: quote.id } });
+      if (!existingContract) {
+        await prisma.contract.create({
+          data: {
+            quoteId: quote.id,
+            workerId: quote.userId,
+            employerEmail: 'pending_checkout@example.com', // Will be updated by webhook
+            amount: amount,
+            currency: currency,
+            interval: 'month',
+            status: 'pending',
+            nextPaymentDate: new Date(), // Will be updated by webhook
+          }
+        });
+      }
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (err) {

@@ -4,13 +4,13 @@ import { prisma } from '@/lib/prisma';
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { id } = await params;
+    const { id } = params;
 
     const quote = await prisma.quote.findUnique({
       where: { id },
@@ -33,13 +33,13 @@ export async function DELETE(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { id } = await params;
+    const { id } = params;
     const body = await req.json();
 
     const quote = await prisma.quote.findUnique({
@@ -57,6 +57,7 @@ export async function PATCH(
         status: body.status,
         clientName: body.clientName,
         projectTitle: body.projectTitle,
+        mode: body.mode,
         itemsJson: body.items ?? undefined,
         retainerNegotiation: body.retainerNegotiation ?? undefined,
       },

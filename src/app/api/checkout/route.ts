@@ -5,7 +5,8 @@ import { selectProvider } from '@/lib/providers';
 import Flutterwave from 'flutterwave-node-v3';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
-const stripe = stripeSecret ? new Stripe(stripeSecret, { apiVersion: '2025-02-24.acacia' }) : null;
+const STRIPE_API_VERSION: Stripe.StripeConfig['apiVersion'] = '2025-11-17.clover';
+const stripe = stripeSecret ? new Stripe(stripeSecret, { apiVersion: STRIPE_API_VERSION }) : null;
 const DEFAULT_PLATFORM_FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT || '5');
 const flwSecret = process.env.FLUTTERWAVE_SECRET_KEY;
 const flw = flwSecret ? new Flutterwave(process.env.FLUTTERWAVE_PUBLIC_KEY || '', flwSecret) : null;
@@ -15,14 +16,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
   }
 
-  let body: { slug?: string; packageId?: string | null; planId?: string | null };
+  let body: { slug?: string; packageId?: string | null; planId?: string | null; paymentMethod?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { slug, packageId, planId } = body;
+  const { slug, packageId, planId, paymentMethod } = body;
   if (!slug) {
     return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
   }
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
   const payToday = Math.max(plan ? plan.deposit : Math.round(baseTotal * 0.5), 50);
   const platformFeePercent = settings?.platformFeePercent ?? DEFAULT_PLATFORM_FEE_PERCENT;
   const currency = (quote.currency || settings?.currency || 'USD').toUpperCase();
+  const customerEmail = quote.user?.email || 'client@example.com';
 
   const successUrl =
     process.env.STRIPE_SUCCESS_URL?.replace('{slug}', quote.slug) ||
@@ -66,13 +68,19 @@ export async function POST(req: Request) {
   if (provider === 'flutterwave') {
     if (!flw) return NextResponse.json({ error: 'Flutterwave not configured' }, { status: 500 });
     try {
+      // Determine payment options based on paymentMethod
+      const paymentOptions = paymentMethod && paymentMethod !== 'card'
+        ? 'mobilemoney'
+        : 'card,mobilemoney,ussd,bank_transfer';
+
       const payload: Record<string, unknown> = {
         tx_ref: `${quote.slug}-${Date.now()}`,
         amount: payToday,
         currency,
         redirect_url: successUrl,
+        payment_options: paymentOptions,
         customer: {
-          email: quote.clientName || 'client@example.com',
+          email: customerEmail,
           name: quote.clientName || 'Client',
         },
         customizations: {
@@ -83,6 +91,7 @@ export async function POST(req: Request) {
           slug: quote.slug,
           packageId: pkg?.id ?? '',
           planId: plan?.id ?? '',
+          paymentMethod: paymentMethod || 'card',
         },
       };
 

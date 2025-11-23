@@ -10,41 +10,48 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'feather-green': {
-          DEFAULT: '#58CC02',
-          active: '#46A302', // Darker for active state
+        // Ledger Palette
+        'alabaster': '#FAFAF9',
+        'ink-black': '#0A0A0A',
+        'racing-green': {
+          DEFAULT: '#1A4D2E',
+          active: '#143D24',
         },
-        'macaw-blue': {
-          DEFAULT: '#1CB0F6',
-          active: '#1899D6',
-        },
-        'cardinal-red': {
-          DEFAULT: '#FF4B4B',
-          active: '#D93A3A',
-        },
-        'fox-orange': {
-          DEFAULT: '#FF9600',
-          active: '#D97F00',
-        },
-        'bee-yellow': {
-          DEFAULT: '#FFC800',
-          active: '#E5B400',
-        },
-        'eel-black': '#4B4B4B',
-        'wolf-grey': '#777777',
-        'hare-grey': '#E5E5E5',
-        'swan-white': '#FFFFFF',
+        'acid-lime': '#D4F34A',
+        'ledger-grey': '#E5E5E5',
+
+        // Legacy Mappings (to prevent immediate breakage, mapped to new palette)
+        'feather-green': '#1A4D2E', // Maps to Racing Green
+        'macaw-blue': '#0A0A0A',    // Maps to Ink Black (Secondary actions)
+        'cardinal-red': '#FF4B4B',  // Keep Red for errors
+        'fox-orange': '#D4F34A',    // Maps to Acid Lime
+        'bee-yellow': '#D4F34A',    // Maps to Acid Lime
+        'eel-black': '#0A0A0A',     // Maps to Ink Black
+        'wolf-grey': '#777777',     // Keep Grey
+        'hare-grey': '#E5E5E5',     // Maps to Ledger Grey
+        'swan-white': '#FAFAF9',    // Maps to Alabaster
       },
       borderRadius: {
-        'xl': '12px',
-        '2xl': '16px',
-        '3xl': '20px',
+        'xl': '8px',   // Tighter
+        '2xl': '12px', // Tighter
+        '3xl': '16px', // Tighter
       },
       boxShadow: {
-        'btn': '0px 4px 0px 0px', // Hard shadow for 3D effect
+        'btn': '0px 0px 0px 0px', // Flat
+        'lift': '0px 4px 12px rgba(0,0,0,0.08)', // Soft lift
       },
       fontFamily: {
-        sans: ['"Nunito"', 'sans-serif'], // We'll need to import this
+        sans: ['"Satoshi"', 'sans-serif'],
+        display: ['"Clash Display"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+      },
+      letterSpacing: {
+        tighter: '-0.05em',
+        tight: '-0.025em',
+        normal: '0em',
+        wide: '0.025em',
+        wider: '0.05em',
+        widest: '0.1em',
       }
     },
   },

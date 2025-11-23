@@ -9,12 +9,15 @@ import { useStore, type Quote } from '@/lib/store';
 import { Zap, DollarSign, FileText, Hourglass, Bird } from 'lucide-react';
 import { toast } from 'sonner';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
+import { WorkerDashboard } from '@/components/worker/WorkerDashboard';
 
 export default function DashboardPage() {
   const { user } = useUser();
   const quotes = useStore((state) => state.quotes);
   const setQuotes = useStore((state) => state.setQuotes);
   const [isLoading, setIsLoading] = useState(false);
+  const [userType, setUserType] = useState<string | null>(null);
+  const [contracts, setContracts] = useState<any[]>([]);
 
   const renderRetainer = (quote: Quote) => {
     if (!quote.retainerStatus || quote.retainerStatus === 'none') return null;
@@ -39,6 +42,24 @@ export default function DashboardPage() {
     );
   };
 
+  // Load user settings to check userType
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.settings?.userType) {
+            setUserType(data.settings.userType);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load settings', error);
+      }
+    };
+    loadSettings();
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const loadQuotes = async () => {
@@ -50,6 +71,18 @@ export default function DashboardPage() {
         const data = await res.json();
         if (isMounted && data?.quotes) {
           setQuotes(data.quotes);
+          // Filter for contracts (mode = 'salary')
+          const workerContracts = data.quotes
+            .filter((q: Quote) => q.mode === 'salary')
+            .map((q: Quote) => ({
+              id: q.id,
+              employerName: q.clientName,
+              amount: q.totalAmount || 0,
+              status: q.retainerStatus || 'pending',
+              nextPaymentDate: new Date(),
+              currency: q.currency || 'USD',
+            }));
+          setContracts(workerContracts);
         }
       } catch (error) {
         console.error('Failed to load quotes', error);
@@ -75,6 +108,11 @@ export default function DashboardPage() {
   const recentClients = Array.from(new Set(quotes.map(q => q.clientName))).slice(0, 5);
 
   // Simple Revenue Chart Data (Mock distribution for visual)
+
+  // Show worker dashboard if user is a worker
+  if (userType === 'worker') {
+    return <WorkerDashboard contracts={contracts} userName={user?.firstName || 'there'} />;
+  }
 
   return (
     <div className="p-8 space-y-8 max-w-6xl mx-auto">

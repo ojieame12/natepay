@@ -10,7 +10,7 @@ export async function GET() {
     where: { userId },
   });
 
-  return NextResponse.json(settings || {});
+  return NextResponse.json({ settings: settings || null });
 }
 
 export async function POST(req: Request) {
@@ -19,11 +19,14 @@ export async function POST(req: Request) {
   if (!userId || !user) return new NextResponse('Unauthorized', { status: 401 });
 
   let body: {
+    userType?: string;
+    jobType?: string;
     businessName?: string;
     currency?: string;
     baseHourlyRate?: number;
     minHourlyRate?: number;
     defaultDeposit?: number;
+    simplifiedUI?: boolean;
   };
 
   try {
@@ -32,7 +35,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { businessName, currency, baseHourlyRate, minHourlyRate, defaultDeposit } = body ?? {};
+  const { userType, jobType, businessName, currency, baseHourlyRate, minHourlyRate, defaultDeposit, simplifiedUI } = body ?? {};
   const safeCurrency = currency && currency.length === 3 ? currency.toUpperCase() : 'USD';
   const safeBase = baseHourlyRate && baseHourlyRate > 0 ? Number(baseHourlyRate) : undefined;
   const safeMin = minHourlyRate && minHourlyRate > 0 ? Number(minHourlyRate) : undefined;
@@ -48,23 +51,29 @@ export async function POST(req: Request) {
   const settings = await prisma.userSettings.upsert({
     where: { userId },
     update: {
+      userType,
+      jobType,
       businessName,
       currency: safeCurrency,
       baseHourlyRate: safeBase,
       minHourlyRate: safeMin,
       defaultDeposit: safeDeposit,
+      simplifiedUI,
       onboardingComplete: true,
     },
     create: {
       userId,
+      userType,
+      jobType,
       businessName,
       currency: safeCurrency,
       baseHourlyRate: safeBase,
       minHourlyRate: safeMin,
       defaultDeposit: safeDeposit,
+      simplifiedUI: simplifiedUI ?? false,
       onboardingComplete: true,
     },
   });
 
-  return NextResponse.json(settings);
+  return NextResponse.json({ settings });
 }
